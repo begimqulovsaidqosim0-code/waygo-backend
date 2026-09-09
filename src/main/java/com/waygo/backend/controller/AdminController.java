@@ -241,9 +241,16 @@ public class AdminController {
     }
 
     @GetMapping("/orders")
-    public String orders(Model model) {
+    public String orders(
+            @org.springframework.web.bind.annotation.RequestParam(value = "page", defaultValue = "0") int page,
+            @org.springframework.web.bind.annotation.RequestParam(value = "size", defaultValue = "20") int size,
+            Model model) {
+        org.springframework.data.domain.Page<Order> orderPage = orderRepository.findAll(
+                org.springframework.data.domain.PageRequest.of(page, size,
+                        org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt")));
         model.addAttribute("title", "WayGO Barcha Buyurtmalar");
-        model.addAttribute("orders", orderRepository.findAll());
+        model.addAttribute("orders", orderPage.getContent());
+        model.addAttribute("page", orderPage);
         model.addAttribute("activeItem", "orders");
         return "admin/orders";
     }

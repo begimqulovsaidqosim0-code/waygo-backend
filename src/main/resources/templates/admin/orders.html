@@ -61,6 +61,25 @@
                     </tr>
                 </tbody>
             </table>
+
+            <div th:if="${page.totalPages > 0}"
+                 style="display: flex; align-items: center; justify-content: space-between; margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div style="color: var(--text-dim); font-size: 0.85rem;">
+                    Jami <span th:text="${page.totalElements}">0</span> ta buyurtma,
+                    <span th:text="${page.number + 1}">1</span>/<span th:text="${page.totalPages}">1</span>-sahifa
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <a th:if="${page.hasPrevious()}"
+                       th:href="@{/admin/orders(page=${page.number - 1}, size=${page.size})}"
+                       class="btn btn-outline">Oldingi</a>
+                    <span th:unless="${page.hasPrevious()}" class="btn btn-outline" style="opacity: 0.4; pointer-events: none;">Oldingi</span>
+
+                    <a th:if="${page.hasNext()}"
+                       th:href="@{/admin/orders(page=${page.number + 1}, size=${page.size})}"
+                       class="btn btn-primary">Keyingi</a>
+                    <span th:unless="${page.hasNext()}" class="btn btn-outline" style="opacity: 0.4; pointer-events: none;">Keyingi</span>
+                </div>
+            </div>
         </div>
     </div>
 <script th:replace="~{admin/fragments :: scripts}"></script>
