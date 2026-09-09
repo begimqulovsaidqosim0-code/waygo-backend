@@ -506,5 +506,11 @@
   "deleteAccountConfirmMessage": "Haqiqatan ham hisobingizni o'chirmoqchimisiz? Bu amalni orqaga qaytarib bo'lmaydi va barcha shaxsiy ma'lumotlaringiz o'chiriladi.",
   "yesDeleteAccount": "Ha, o'chirish",
   "deleteAccountSuccessMessage": "Hisobingiz muvaffaqiyatli o'chirildi",
-  "deleteAccountErrorMessage": "Hisobni o'chirishda xatolik yuz berdi"
+  "deleteAccountErrorMessage": "Hisobni o'chirishda xatolik yuz berdi",
+  "chatHistoryLoadErrorMessage": "Suhbat tarixini yuklab bo'lmadi",
+  "messageSendErrorMessage": "Xabar jo'natib bo'lmadi",
+  "messageInputHint": "Xabar yozing...",
+  "supportPageTitle": "Qo'llab-quvvatlash",
+  "waygoSupportHeaderTitle": "WayGO qo'llab-quvvatlash",
+  "supportContactExplanationMessage": "Tizim ma'muriyati bilan bog'lanish uchun xabar yozing. Sizning so'rovingiz ko'rib chiqilib, tez orada javob beriladi."
 }

@@ -6,6 +6,7 @@ import com.waygo.backend.entity.Order;
 import com.waygo.backend.entity.RideBooking;
 import com.waygo.backend.entity.User;
 import com.waygo.backend.entity.VipChatMessage;
+import com.waygo.backend.entity.PassengerChatMessage;
 import com.waygo.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -864,6 +865,41 @@ public class NotificationService {
             
             // Send Push Notification
             sendFcmNotification(message.getDriver(), "Yangi xabar", message.getMessageText(), "CHAT_MESSAGE");
+        };
+
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                new org.springframework.transaction.support.TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        sendNotification.run();
+                    }
+                }
+            );
+        } else {
+            sendNotification.run();
+        }
+    }
+
+    public void notifyNewPassengerChatMessage(PassengerChatMessage message) {
+        if (message == null || message.getPassenger() == null) {
+            return;
+        }
+
+        Runnable sendNotification = () -> {
+            java.util.Map<String, Object> payload = new java.util.HashMap<>();
+            payload.put("type", "CHAT_MESSAGE");
+            payload.put("messageText", message.getMessageText());
+            payload.put("sender", message.getSender().name());
+            payload.put("createdAt", message.getCreatedAt() != null ? message.getCreatedAt().toString() : java.time.LocalDateTime.now().toString());
+            payload.put("id", message.getId());
+
+            messagingTemplate.convertAndSend(
+                    "/topic/notifications/" + message.getPassenger().getId(),
+                    payload
+            );
+
+            sendFcmNotification(message.getPassenger(), "Yangi xabar", message.getMessageText(), "CHAT_MESSAGE");
         };
 
         if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {

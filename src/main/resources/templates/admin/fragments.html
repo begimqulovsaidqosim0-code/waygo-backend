@@ -173,7 +173,10 @@
                 <i class="ph ph-credit-card"></i> To'lovlar
             </a>
             <a th:href="@{/admin/chat}" class="nav-item" th:classappend="${activeItem == 'chat' ? 'active' : ''}">
-                <i class="ph ph-chat-circle-dots"></i> Yordam Chati
+                <i class="ph ph-chat-circle-dots"></i> Haydovchilar Chati
+            </a>
+            <a th:href="@{/admin/passenger-chat}" class="nav-item" th:classappend="${activeItem == 'passenger_chat' ? 'active' : ''}">
+                <i class="ph ph-chats-circle"></i> Yo'lovchilar Chati
             </a>
             <a th:href="@{/admin/settings}" class="nav-item" th:classappend="${activeItem == 'settings' ? 'active' : ''}">
                 <i class="ph ph-gear"></i> Sozlamalar

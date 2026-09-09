@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments :: head(${title})}"></head>
+<style>
+    .chat-container {
+        display: flex;
+        height: calc(100vh - 10rem);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        overflow: hidden;
+        margin-top: 1.5rem;
+    }
+    .chat-sidebar {
+        width: 320px;
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        background: rgba(0,0,0,0.1);
+    }
+    .chat-search {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .chat-search input {
+        width: 100%;
+        padding: 0.6rem 0.8rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border);
+        background: var(--input-bg);
+        color: var(--text);
+        font-size: 0.9rem;
+    }
+    .chat-search input:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+    .chat-drivers-list {
+        flex: 1;
+        overflow-y: auto;
+    }
+    .driver-chat-item {
+        padding: 1rem;
+        display: flex;
+        gap: 0.75rem;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        transition: all 0.2s;
+        align-items: center;
+    }
+    .driver-chat-item:hover, .driver-chat-item.active {
+        background: var(--surface-hover);
+    }
+    .driver-chat-item.active {
+        border-left: 4px solid var(--primary);
+    }
+    .driver-info {
+        flex: 1;
+        min-width: 0;
+    }
+    .driver-name-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 0.25rem;
+    }
+    .driver-chat-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .driver-chat-time {
+        font-size: 0.75rem;
+        color: var(--text-dim);
+        flex-shrink: 0;
+    }
+    .driver-chat-last-msg {
+        font-size: 0.8rem;
+        color: var(--text-dim);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: rgba(0,0,0,0.05);
+        position: relative;
+        min-height: 0;
+    }
+    .chat-placeholder {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-dim);
+        gap: 1rem;
+    }
+    .chat-placeholder i {
+        font-size: 4rem;
+        color: var(--primary);
+        opacity: 0.4;
+    }
+    .chat-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        background: rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .chat-header-user {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .chat-header-details {
+        display: flex;
+        flex-direction: column;
+    }
+    .chat-header-name {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--text);
+    }
+    .chat-header-phone {
+        font-size: 0.85rem;
+        color: var(--text-dim);
+    }
+
+    .chat-messages {
+        flex: 1;
+        padding: 1.5rem;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-height: 0;
+    }
+    .msg-bubble-wrapper {
+        display: flex;
+        width: 100%;
+    }
+    .msg-bubble-wrapper.driver {
+        justify-content: flex-start;
+    }
+    .msg-bubble-wrapper.admin {
+        justify-content: flex-end;
+    }
+    .msg-bubble {
+        max-width: 65%;
+        padding: 0.75rem 1rem;
+        border-radius: 1rem;
+        position: relative;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+    .msg-bubble-wrapper.driver .msg-bubble {
+        background: var(--surface-hover);
+        color: var(--text);
+        border-bottom-left-radius: 0.25rem;
+    }
+    .msg-bubble-wrapper.admin .msg-bubble {
+        background: var(--primary);
+        color: #ffffff;
+        border-bottom-right-radius: 0.25rem;
+    }
+    .msg-time {
+        display: block;
+        font-size: 0.7rem;
+        margin-top: 0.25rem;
+        text-align: right;
+        opacity: 0.6;
+    }
+    .msg-bubble-wrapper.driver .msg-time {
+        color: var(--text-dim);
+    }
+    .msg-bubble-wrapper.admin .msg-time {
+        color: rgba(255,255,255,0.8);
+    }
+
+    .chat-input-area {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border);
+        background: rgba(0,0,0,0.1);
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    .chat-input-area textarea {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        background: var(--input-bg);
+        border: 1px solid var(--border);
+        color: var(--text);
+        resize: none;
+        height: 44px;
+        font-family: inherit;
+        font-size: 0.95rem;
+    }
+    .chat-input-area textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .avatar-circle.small {
+        width: 36px;
+        height: 36px;
+        font-size: 0.85rem;
+    }
+</style>
+<body>
+    <div th:replace="~{admin/fragments :: sidebar('passenger_chat')}"></div>
+
+    <div class="main-content" style="display: flex; flex-direction: column; height: 100vh; overflow: hidden;">
+        <h1 th:text="${title}">Yo'lovchilar Chati</h1>
+
+        <div class="chat-container">
+            <!-- Sidebar with list of passenger chats -->
+            <div class="chat-sidebar">
+                <div class="chat-search">
+                    <input type="text" id="chatSearch" placeholder="Yo'lovchini izlash..." oninput="filterPassengers()">
+                </div>
+                <div class="chat-drivers-list" id="passengersList">
+                    <div style="padding: 2rem; text-align: center; color: var(--text-dim);">
+                        Murojaat yuklanmoqda...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active chat screen -->
+            <div class="chat-main" id="chatMain">
+                <!-- Placeholder when no conversation is selected -->
+                <div class="chat-placeholder" id="chatPlaceholder">
+                    <i class="ph ph-chat-circle-dots"></i>
+                    <h3>Murojaatni tanlang</h3>
+                    <p>Muloqot tarixini ko'rish va xabarlarga javob berish uchun chap tomondan yo'lovchini tanlang.</p>
+                </div>
+
+                <!-- Chat content (Hidden by default) -->
+                <div id="chatContent" style="display: none; flex: 1; flex-direction: column; min-height: 0;">
+                    <div class="chat-header">
+                        <div class="chat-header-user">
+                            <div class="avatar-circle" id="activeAvatar">WG</div>
+                            <div class="chat-header-details">
+                                <span class="chat-header-name" id="activeName">Ism</span>
+                                <span class="chat-header-phone" id="activePhone">Tel</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Message Area -->
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Messages dynamically populated -->
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="chat-input-area">
+                        <textarea id="messageInput" placeholder="Xabar yozing... (Enter tugmasi yuborish)" onkeydown="handleKeyPress(event)"></textarea>
+                        <button class="btn btn-primary" onclick="sendReply()" style="height: 44px; width: 44px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                            <i class="ph ph-paper-plane-right" style="font-size: 1.2rem;"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        let currentPassengerId = null;
+        let passengersData = [];
+        let pollingInterval = null;
+
+        // On document ready
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchPassengers();
+            // Poll for the passenger chat list updates every 3 seconds
+            setInterval(fetchPassengers, 3000);
+        });
+
+        // Get initials for Avatar
+        function getInitials(name) {
+            if (!name || name.trim() === '') return 'WG';
+            const parts = name.trim().split(/\s+/);
+            if (parts.length >= 2) {
+                return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+            }
+            return name.substring(0, 2).toUpperCase();
+        }
+
+        // Format Date/Time
+        function formatDateTime(isoString) {
+            if (!isoString) return '';
+            const date = new Date(isoString);
+            const now = new Date();
+
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const timeStr = `${hours}:${minutes}`;
+
+            if (date.toDateString() === now.toDateString()) {
+                return timeStr;
+            }
+
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            return `${day}.${month} ${timeStr}`;
+        }
+
+        // Fetch list of passengers with chats
+        function fetchPassengers() {
+            fetch('/admin/passenger-chat/passengers')
+                .then(res => res.json())
+                .then(data => {
+                    passengersData = data;
+                    renderPassengersList();
+                })
+                .catch(err => console.error("Error fetching chat passengers:", err));
+        }
+
+        // Render passengers in sidebar
+        function renderPassengersList() {
+            const listContainer = document.getElementById('passengersList');
+            const searchQuery = document.getElementById('chatSearch').value.toLowerCase().trim();
+
+            const filtered = passengersData.filter(d =>
+                d.fullName.toLowerCase().includes(searchQuery) ||
+                d.phone.toLowerCase().includes(searchQuery)
+            );
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="padding: 3rem 1.5rem; text-align: center; color: var(--text-dim); font-size: 0.9rem;">
+                        Hech qanday murojaat topilmadi
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(d => {
+                const activeClass = d.id === currentPassengerId ? 'active' : '';
+                const initials = getInitials(d.fullName);
+                const formattedTime = formatDateTime(d.lastMessageTime);
+
+                html += `
+                    <div class="driver-chat-item ${activeClass}" onclick="selectPassenger(${d.id})">
+                        <div class="avatar-circle small">${initials}</div>
+                        <div class="driver-info">
+                            <div class="driver-name-row">
+                                <span class="driver-chat-name">${escapeHtml(d.fullName)}</span>
+                                <span class="driver-chat-time">${formattedTime}</span>
+                            </div>
+                            <div class="driver-chat-last-msg">${escapeHtml(d.lastMessage)}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            listContainer.innerHTML = html;
+        }
+
+        // Filter passengers list
+        function filterPassengers() {
+            renderPassengersList();
+        }
+
+        // Select a passenger and open conversation
+        function selectPassenger(id) {
+            const passenger = passengersData.find(d => d.id === id);
+            currentPassengerId = id;
+
+            // Highlight in sidebar
+            renderPassengersList();
+
+            // Populate active header
+            const name = passenger ? passenger.fullName : "Ismsiz";
+            const phone = passenger ? passenger.phone : "";
+
+            document.getElementById('activeName').innerText = name;
+            document.getElementById('activePhone').innerText = phone;
+            document.getElementById('activeAvatar').innerText = getInitials(name);
+
+            // Show chat window, hide placeholder
+            document.getElementById('chatPlaceholder').style.display = 'none';
+            document.getElementById('chatContent').style.display = 'flex';
+
+            // Fetch chat history
+            fetchHistory(id);
+
+            // Set up polling for messages
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = setInterval(() => {
+                if (currentPassengerId === id) {
+                    fetchHistory(id, true);
+                }
+            }, 3000);
+
+            // Focus on input
+            setTimeout(() => {
+                document.getElementById('messageInput').focus();
+            }, 100);
+        }
+
+        // Fetch conversation history
+        let previousMsgCount = 0;
+        function fetchHistory(passengerId, isSilent = false) {
+            fetch(`/admin/passenger-chat/history/${passengerId}`)
+                .then(res => res.json())
+                .then(messages => {
+                    if (currentPassengerId !== passengerId) return; // avoid race conditions
+
+                    const chatMessages = document.getElementById('chatMessages');
+                    let html = '';
+
+                    messages.forEach(msg => {
+                        const isMe = msg.sender === 'ADMIN';
+                        const bubbleWrapperClass = isMe ? 'admin' : 'driver';
+                        const formattedTime = formatDateTime(msg.createdAt);
+
+                        html += `
+                            <div class="msg-bubble-wrapper ${bubbleWrapperClass}">
+                                <div class="msg-bubble">
+                                    <span>${escapeHtml(msg.messageText)}</span>
+                                    <span class="msg-time">${formattedTime}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    chatMessages.innerHTML = html;
+
+                    // Only scroll to bottom if count changed
+                    if (messages.length !== previousMsgCount) {
+                        scrollToBottom();
+                        previousMsgCount = messages.length;
+                    }
+                })
+                .catch(err => console.error("Error fetching chat history:", err));
+        }
+
+        // Send Reply
+        function sendReply() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text || !currentPassengerId) return;
+
+            input.value = '';
+
+            fetch('/admin/passenger-chat/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    passengerId: currentPassengerId,
+                    messageText: text
+                })
+            })
+            .then(res => res.json())
+            .then(savedMsg => {
+                // Instantly update history
+                fetchHistory(currentPassengerId);
+                // Also update sidebar list
+                fetchPassengers();
+            })
+            .catch(err => {
+                console.error("Error sending chat message:", err);
+                alert("Xabarni yuborib bo'lmadi");
+            });
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendReply();
+            }
+        }
+
+        function scrollToBottom() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Helper to escape HTML characters
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+    </script>
+    <script th:replace="~{admin/fragments :: scripts}"></script>
+</body>
+</html>
